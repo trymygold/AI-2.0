@@ -15,49 +15,26 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <style>
-    /* Toast Notification Style for "Action Disabled" */
+    /* Toast Notification Style */
     #toast-notification {
-      visibility: hidden;
-      min-width: 250px;
-      background-color: #333;
-      color: #d4af37; /* Gold color */
-      text-align: center;
-      border-radius: 4px;
-      padding: 16px;
-      position: fixed;
-      z-index: 9999;
-      left: 50%;
-      bottom: 30px;
-      transform: translateX(-50%);
-      font-size: 17px;
-      font-family: 'Montserrat', sans-serif;
-      border: 1px solid #d4af37;
+      visibility: hidden; min-width: 250px; background-color: #333; color: #d4af37;
+      text-align: center; border-radius: 4px; padding: 16px; position: fixed;
+      z-index: 9999; left: 50%; bottom: 30px; transform: translateX(-50%);
+      font-size: 17px; font-family: 'Montserrat', sans-serif; border: 1px solid #d4af37;
     }
+    #toast-notification.show { visibility: visible; animation: fadein 0.5s, fadeout 0.5s 2.5s; }
+    @keyframes fadein { from {bottom: 0; opacity: 0;} to {bottom: 30px; opacity: 1;} }
+    @keyframes fadeout { from {bottom: 30px; opacity: 1;} to {bottom: 0; opacity: 0;} }
 
-    #toast-notification.show {
-      visibility: visible;
-      -webkit-animation: fadein 0.5s, fadeout 0.5s 2.5s;
-      animation: fadein 0.5s, fadeout 0.5s 2.5s;
+    /* Modal Overlay Base */
+    .modal-overlay {
+        position: fixed; inset: 0; background: rgba(0,0,0,0.9); z-index: 6000;
+        display: none; align-items: center; justify-content: center;
     }
-
-    @-webkit-keyframes fadein {
-      from {bottom: 0; opacity: 0;} 
-      to {bottom: 30px; opacity: 1;}
-    }
-
-    @keyframes fadein {
-      from {bottom: 0; opacity: 0;}
-      to {bottom: 30px; opacity: 1;}
-    }
-
-    @-webkit-keyframes fadeout {
-      from {bottom: 30px; opacity: 1;} 
-      to {bottom: 0; opacity: 0;}
-    }
-
-    @keyframes fadeout {
-      from {bottom: 30px; opacity: 1;}
-      to {bottom: 0; opacity: 0;}
+    .modal-box {
+        background: #1a1a1a; padding: 30px; border-radius: 15px; 
+        border: 1px solid #d4af37; text-align: center; width: 350px; max-width: 85%;
+        box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
     }
   </style>
 </head>
@@ -85,27 +62,28 @@
       </div>
 
       <div class="controls-panel">
-        
         <button id="tryall-btn" class="pill accent" onclick="toggleTryAll()">Try All</button>
-
         <div id="jewelry-mode" class="pill-group">
           <button class="pill" onclick="selectJewelryType('earrings')">Earrings</button>
           <button class="pill" onclick="selectJewelryType('chains')">Chains</button>
           <button class="pill" onclick="selectJewelryType('rings')">Rings</button>
           <button class="pill" onclick="selectJewelryType('bangles')">Bangles</button>
-          </div>
-        
+        </div>
         <div id="jewelry-options" class="carousel-cards" style="display:none;"></div>
       </div>
     </header>
 
+    <div id="ai-concierge-container">
+        <div id="ai-bubble">Tap to activate Nila</div>
+        <div id="ai-avatar" onclick="toggleConciergeMute()">
+            <div class="avatar-ring"></div>
+            <div class="avatar-face">🤖</div> 
+        </div>
+    </div>
+
     <div id="preview-modal">
         <span class="close-preview" onclick="closePreview()">&times;</span>
-        
-        <div class="preview-container">
-            <img id="preview-image" src="" alt="Captured Look">
-        </div>
-
+        <div class="preview-container"><img id="preview-image" src="" alt="Captured Look"></div>
         <div class="preview-actions">
             <button class="pill accent" onclick="downloadSingleSnapshot()">Download</button>
             <button class="pill" onclick="shareSingleSnapshot()">Share</button>
@@ -116,9 +94,7 @@
       <div class="gallery-content">
         <span class="close-gallery" onclick="closeGallery()">&times;</span>
         <h2 style="color:#d4af37; font-family:'Playfair Display';">Your Collection</h2>
-        
         <div id="gallery-grid"></div>
-        
         <div style="margin-top:20px;">
           <button class="pill accent" onclick="downloadAllAsZip()">Download ZIP</button>
         </div>
@@ -127,24 +103,31 @@
 
     <div id="lightbox-overlay">
         <span class="close-lightbox" onclick="closeLightbox()">&times;</span>
-        
         <div class="lightbox-nav prev" onclick="changeLightboxImage(-1)">&#10094;</div>
         <div class="lightbox-nav next" onclick="changeLightboxImage(1)">&#10095;</div>
-
-        <div class="lightbox-main">
-            <img id="lightbox-image" src="" alt="Zoomed View">
-        </div>
+        <div class="lightbox-main"><img id="lightbox-image" src="" alt="Zoomed View"></div>
     </div>
 
     <div id="whatsapp-modal" class="modal-overlay">
         <div class="modal-box">
             <h2 style="color:#d4af37; font-family:'Playfair Display';">Save Your Vibe</h2>
-            <p style="color:#ccc;">Enter WhatsApp number to download images and get exclusive offers.</p>
-            
-            <input type="tel" id="user-phone" placeholder="+91 7019743880" class="input-dark">
-            
+            <p style="color:#ccc; font-size:14px;">Enter WhatsApp number to download images.</p>
+            <input type="tel" id="user-phone" placeholder="+91 99999 99999" class="input-dark" style="width:90%; padding:10px; margin:10px 0; background:#333; border:1px solid #555; color:white;">
             <button class="pill accent" onclick="confirmWhatsAppDownload()">Send & Download</button>
-            <button onclick="closeWhatsAppModal()" class="btn-text">Cancel</button>
+            <button onclick="document.getElementById('whatsapp-modal').style.display='none'" class="btn-text" style="background:none; border:none; color:#888; text-decoration:underline; margin-top:10px; cursor:pointer;">Cancel</button>
+        </div>
+    </div>
+
+    <div id="daily-drop-modal" class="modal-overlay">
+        <div class="modal-box" style="background: linear-gradient(145deg, #1a1a1a, #000); border: 1px solid #d4af37;">
+            <div style="text-align:right;"><span onclick="closeDailyDrop()" style="cursor:pointer; font-size:24px; color:#666;">&times;</span></div>
+            <h3 style="color:#d4af37; font-family:'Playfair Display'; margin:0; font-size:22px;">✨ Daily Drop</h3>
+            <p style="color:#888; font-size:12px; margin-bottom:15px; letter-spacing:1px;">CURATED JUST FOR YOU</p>
+            <div style="background:#000; padding:10px; border-radius:10px; margin-bottom:15px;">
+                <img id="daily-img" src="" style="width:100%; height:200px; object-fit:contain; border-radius:5px;">
+            </div>
+            <h4 id="daily-name" style="color:white; margin:5px 0;">Golden Jhumka</h4>
+            <button class="pill accent" style="width:100%; margin-top:10px;" onclick="tryDailyItem()">Try This Look</button>
         </div>
     </div>
 
@@ -154,40 +137,18 @@
             <p id="process-text" style="color:white; margin-top:10px;">Processing...</p>
         </div>
     </div>
-
     <div id="toast-notification">Action Disabled</div>
-
   </div>
 
   <script src="script.js"></script>
 
   <script>
-    // Helper function to show the toast
     function showToast(message) {
       var x = document.getElementById("toast-notification");
-      x.innerText = message;
-      x.className = "show";
+      x.innerText = message; x.className = "show";
       setTimeout(function(){ x.className = x.className.replace("show", ""); }, 3000);
     }
-
-    // Disable Right Click
     document.addEventListener('contextmenu', event => event.preventDefault());
-
-    // Block common DevTools shortcuts
-    document.addEventListener('keydown', function(e) {
-      // Check for Ctrl or Cmd key
-      const meta = e.ctrlKey || e.metaKey; 
-      
-      // Block F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C, Ctrl+U
-      if (
-        e.key === "F12" ||
-        (meta && e.shiftKey && (e.key === "I" || e.key === "J" || e.key === "C")) ||
-        (meta && e.key === "u") // view-source
-      ) {
-        e.preventDefault();
-        showToast("Action Disabled");
-      }
-    });
   </script>
 </body>
 </html>
